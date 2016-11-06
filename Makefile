@@ -11,13 +11,14 @@ GAME_TITLE = Hello by Caleb
 .PHONY: run clean
 
 $(TARGET): $(NAME).o $(NAME).elf
-	$(NDSTOOL) -c $(TARGET) -9 $(NAME).elf -b $(GAME_ICON) "$(GAME_TITLE)"
+	$(NDSTOOL) -c $(TARGET) -9 $(NAME).elf -b $(GAME_ICON) "$(GAME_TITLE)" -d models
 
 main.o: $(NAME).c
-	$(CC) -MMD -MP -MF $(NAME).d $(CFLAGS) -c $(NAME).c -I$(DEVKITPRO)/libnds/include -o $(NAME).o
+	$(CC) -MMD -MP -MF $(NAME).d $(CFLAGS) -c $(NAME).c -I$(DEVKITPRO)/libnds/include \
+	-I/usr/local/include/libxml2 -o $(NAME).o
 
 main.elf: $(NAME).o
-	$(CC) -specs=ds_arm9.specs -g $(ARCH) $(NAME).o -L$(DEVKITPRO)/libnds/lib -lnds9 -o $(NAME).elf
+	$(CC) -specs=ds_arm9.specs -g $(ARCH) $(NAME).o -L$(DEVKITPRO)/libnds/lib -lfilesystem -lfat -lnds9 -o $(NAME).elf
 
 run:
 	$(NDSEMU) $(TARGET)
