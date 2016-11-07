@@ -6,19 +6,55 @@
 #include <sys/stat.h>
 #include "simplexml.h"
 
+enum model_load_state {INIT, START_MESH_POSITION, STOP_MESH_POSITION};
+enum model_load_state state = INIT;
+
+double *mesh_positions;
+int *poly_positions;
+int poly_count;
+
 void* float_array_content_xml_handler(SimpleXmlParser parser, SimpleXmlEvent event,
 	const char* szName, const char* szAttribute, const char* szValue)
 {
 	if(event == ADD_ATTRIBUTE) {
 		if (strcmp(szAttribute, "id") == 0) {
 			if(strstr(szValue, "mesh-positions-array")) {
-				simpleXmlPushUserData(parser, "mesh-positions-array");
+				state = START_MESH_POSITION;
+			}
+		} else if (strcmp(szAttribute, "count") == 0) {
+			if(state == START_MESH_POSITION) {
+				mesh_positions = malloc(atoi(szValue) * sizeof(double));
 			}
 		}
 	} else if(event == ADD_CONTENT) {
-		if(strcmp("mesh-positions-array", (char *)simpleXmlPopUserData(parser)) == 0) {
-			iprintf("%s", szValue);
+		if(state == START_MESH_POSITION) {
+			char *position = strtok((char *)szValue, " ");
+			int i = 0;
+			while(position) {
+				mesh_positions[i++] = atof(position);
+				position = strtok(NULL, " ");
+			}
+			iprintf("mesh positions count %i\n", i);
+			state = STOP_MESH_POSITION;
 		}
+	}
+	return NULL;
+}
+
+void* p_content_xml_handler(SimpleXmlParser parser, SimpleXmlEvent event,
+	const char* szName, const char* szAttribute, const char* szValue)
+{
+	if(event == ADD_CONTENT) {
+		char *position = strtok((char *)szValue, " ");
+		int i = 0, m = 0;
+		while(position) {
+			// read every other position since polylist contains normal data
+			if(m++ % 2 == 0) {
+				poly_positions[i++] = atoi(position);
+			}
+			position = strtok(NULL, " ");
+		}
+		iprintf("poly index count %i\n", i);
 	}
 	return NULL;
 }
@@ -34,12 +70,30 @@ void* float_array_xml_handler(SimpleXmlParser parser, SimpleXmlEvent event,
 	return NULL;
 }
 
+void* polylist_xml_handler(SimpleXmlParser parser, SimpleXmlEvent event,
+	const char* szName, const char* szAttribute, const char* szValue)
+{
+	if(event == ADD_ATTRIBUTE) {
+		if (strcmp(szAttribute, "count") == 0) {
+			poly_count = atoi(szValue) * 3; // triangulated
+			poly_positions = malloc(poly_count * sizeof(int));
+		}
+	} else if (event == ADD_SUBTAG) {
+		if (strcmp(szName, "p") == 0) {
+			return p_content_xml_handler;
+		}
+	}
+	return NULL;
+}
+
 void* source_xml_handler(SimpleXmlParser parser, SimpleXmlEvent event,
 	const char* szName, const char* szAttribute, const char* szValue)
 {
 	if (event == ADD_SUBTAG) {
 		if (strcmp(szName, "source") == 0) {
 			return float_array_xml_handler;
+		} else if (strcmp(szName, "polylist") == 0) {
+			return polylist_xml_handler;
 		}
 	}
 	return NULL;
@@ -110,7 +164,6 @@ int main(void) {
 						iprintf("Read all %d bytes into memory!\n", bytes_read);
 						SimpleXmlParser parser = simpleXmlCreateParser(file_data, bytes_read);
 						if(parser) {
-							iprintf("Parsed xml file\n");
 							simpleXmlParse(parser, collada_xml_handler);
 							simpleXmlDestroyParser(parser);
 						}
