@@ -12,14 +12,17 @@ GAME_TITLE = COLLADA Model Viewer
 $(TARGET): main.o main.elf
 	$(NDSTOOL) -c $(TARGET) -9 main.elf -b $(GAME_ICON) "$(GAME_TITLE)" -d models
 
-main.elf: main.o simplexml.o
-	$(CC) -specs=ds_arm9.specs -g $(ARCH) main.o simplexml.o -L$(DEVKITPRO)/libnds/lib -lfilesystem -lfat -lnds9 -o main.elf
+main.elf: main.o simplexml.o model.o
+	$(CC) -specs=ds_arm9.specs -g $(ARCH) main.o simplexml.o model.o -L$(DEVKITPRO)/libnds/lib -lfilesystem -lfat -lnds9 -o main.elf
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c main.c -I$(DEVKITPRO)/libnds/include
 
 simplexml.o: simplexml.c simplexml.h
 	$(CC) $(CFLAGS) -c simplexml.c
+
+model.o: model.c model.h
+	$(CC) $(CFLAGS) -c model.c -I$(DEVKITPRO)/libnds/include
 
 run:
 	$(NDSEMU) $(TARGET)
