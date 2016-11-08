@@ -2,7 +2,12 @@
 #define _MODEL_H_
 
 struct model {
-	double *vertices;
+	struct geometry *geometries;
+	int count;
+};
+
+struct geometry {
+    double *vertices;
 	int *indices;
 	int count;
 };

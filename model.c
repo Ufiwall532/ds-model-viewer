@@ -14,6 +14,8 @@ void *float_array_content_tag_handler(SimpleXmlParser parser,
     SimpleXmlEvent event, const char *name, const char *attribute,
     const char *value)
 {
+    struct geometry *curr = &new_model->geometries[new_model->count-1];
+    
 	if(event == ADD_ATTRIBUTE) {
 		if (strcmp(attribute, "id") == 0) {
 			if(strstr(value, "mesh-positions-array")) {
@@ -21,7 +23,7 @@ void *float_array_content_tag_handler(SimpleXmlParser parser,
 			}
 		} else if (strcmp(attribute, "count") == 0) {
 			if(state == START_MESH_POSITION) {
-				new_model->vertices = malloc(atoi(value) * sizeof(double));
+				curr->vertices = malloc(atoi(value) * sizeof(double));
 			}
 		}
 	} else if(event == ADD_CONTENT) {
@@ -29,7 +31,7 @@ void *float_array_content_tag_handler(SimpleXmlParser parser,
 			char *position = strtok((char *)value, " ");
 			int i = 0;
 			while(position) {
-				new_model->vertices[i++] = atof(position);
+				curr->vertices[i++] = atof(position);
 				position = strtok(NULL, " ");
 			}
 			state = STOP_MESH_POSITION;
@@ -42,12 +44,13 @@ void *p_content_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
 	const char *name, const char *attribute, const char *value)
 {
 	if(event == ADD_CONTENT) {
+	    struct geometry *curr = &new_model->geometries[new_model->count-1];
 		char *position = strtok((char *)value, " ");
 		int i = 0, m = 0;
 		while(position) {
 			// read every other position since polylist contains normal data
 			if(m++ % 2 == 0) {
-				new_model->indices[i++] = atoi(position);
+				curr->indices[i++] = atoi(position);
 			}
 			position = strtok(NULL, " ");
 		}
@@ -71,8 +74,9 @@ void *polylist_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
 {
 	if(event == ADD_ATTRIBUTE) {
 		if (strcmp(attribute, "count") == 0) {
-			new_model->count = atoi(value) * 3; // triangulated
-			new_model->indices = malloc(new_model->count * sizeof(int));
+		    struct geometry *curr = &new_model->geometries[new_model->count-1];
+			curr->count = atoi(value) * 3;
+			curr->indices = malloc(curr->count * sizeof(int));
 		}
 	} else if (event == ADD_SUBTAG) {
 		if (strcmp(name, "p") == 0) {
@@ -111,6 +115,9 @@ void *geometry_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
 {
 	if (event == ADD_SUBTAG) {
 		if (strcmp(name, "geometry") == 0) {
+		    new_model->count++;
+		    new_model->geometries = realloc(new_model->geometries,
+		        new_model->count * sizeof(struct geometry));
 			return mesh_tag_handler;
 		}
 	}
@@ -185,5 +192,4 @@ struct model *load_model(char *file_name) {
 	
 	return new_model;
 }
-
 

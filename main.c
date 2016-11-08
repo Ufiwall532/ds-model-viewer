@@ -11,7 +11,7 @@ int main(void) {
 		return 0;
 	}
 	
-	struct model *ico = load_model("ico.dae");
+	struct model *model = load_model("multi-object-test.dae");
 	
 	videoSetMode(MODE_0_3D);
 	glInit();
@@ -31,35 +31,39 @@ int main(void) {
 
 	while(1) {
 		glPushMatrix();
-		glTranslatef32(0, 0, floattof32(-1));
+		glTranslatef32(0, 0, floattof32(-2));
 		glRotateX(rotateX);
 		glRotateY(rotateY);
 		glMatrixMode(GL_MODELVIEW);
 		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
 		
-		for(int i = 0; i < ico->count; i += 3) {
-			glBegin(GL_TRIANGLE);
-				glColor3b(255,0,0);
-				glVertex3v16(
-					floattof32(ico->vertices[ico->indices[i] * 3]),
-					floattof32(ico->vertices[ico->indices[i] * 3 + 1]),
-					floattof32(ico->vertices[ico->indices[i] * 3 + 2])
-				);
+		for(int i = 0; i < model->count; i++) {
+		    struct geometry *curr = &model->geometries[i];
+		    
+		    for(int j = 0; j < curr->count; j += 3) {
+			    glBegin(GL_TRIANGLE);
+				    glColor3b(255,0,0);
+				    glVertex3v16(
+					    floattof32(curr->vertices[curr->indices[j] * 3]),
+					    floattof32(curr->vertices[curr->indices[j] * 3 + 1]),
+					    floattof32(curr->vertices[curr->indices[j] * 3 + 2])
+				    );
 
-				glColor3b(0,255,0);
-				glVertex3v16(
-					floattof32(ico->vertices[ico->indices[i + 1] * 3]),
-					floattof32(ico->vertices[ico->indices[i + 1] * 3 + 1]),
-					floattof32(ico->vertices[ico->indices[i + 1] * 3 + 2])
-				);
+				    glColor3b(0,255,0);
+				    glVertex3v16(
+					    floattof32(curr->vertices[curr->indices[j + 1] * 3]),
+					    floattof32(curr->vertices[curr->indices[j + 1] * 3 + 1]),
+					    floattof32(curr->vertices[curr->indices[j + 1] * 3 + 2])
+				    );
 
-				glColor3b(0,0,255);
-				glVertex3v16(
-					floattof32(ico->vertices[ico->indices[i + 2] * 3]),
-					floattof32(ico->vertices[ico->indices[i + 2] * 3 + 1]),
-					floattof32(ico->vertices[ico->indices[i + 2] * 3 + 2])
-				);
-			glEnd();
+				    glColor3b(0,0,255);
+				    glVertex3v16(
+					    floattof32(curr->vertices[curr->indices[j + 2] * 3]),
+					    floattof32(curr->vertices[curr->indices[j + 2] * 3 + 1]),
+					    floattof32(curr->vertices[curr->indices[j + 2] * 3 + 2])
+				    );
+			    glEnd();
+		    }
 		}
 		
 		glPopMatrix(1);
@@ -71,7 +75,7 @@ int main(void) {
 		swiWaitForVBlank();
 	}
 	
-	free(ico);
+	free(model);
 
 	return 0;
 }
