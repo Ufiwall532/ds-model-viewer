@@ -176,9 +176,65 @@ int main(void) {
 		}
 		fclose(model_file);
 	}
+	
+	videoSetMode(MODE_0_3D);
+	glInit();
+	glClearColor(0,0,0,31); // BG must be opaque for AA to work
+	glClearPolyID(63); // BG must have a unique polygon ID for AA to work
+	glClearDepth(0x7FFF);
+	glViewport(0,0,255,191);
+	
+	//any floating point gl call is being converted to fixed prior to being implemented
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(70, 256.0 / 192.0, 0.1, 40);
+	
+	gluLookAt(	0.0, 0.0, 1.0,		//camera possition 
+				0.0, 0.0, 0.0,		//look at
+				0.0, 1.0, 0.0);		//up
+
+	float rotateX = 0.0;
+	float rotateY = 0.0;
 
 	while(1) {
+		glPushMatrix();
 		swiWaitForVBlank();
+		glTranslatef32(0, 0, floattof32(-1));
+		glRotateX(rotateX);
+		glRotateY(rotateY);
+		glMatrixMode(GL_MODELVIEW);
+		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
+		
+		for(int i = 0; i < poly_count; i += 3) {
+			glBegin(GL_TRIANGLE);
+				glColor3b(255,0,0);
+				glVertex3v16(
+					floattof32(mesh_positions[poly_positions[i] * 3]),
+					floattof32(mesh_positions[poly_positions[i] * 3 + 1]),
+					floattof32(mesh_positions[poly_positions[i] * 3 + 2])
+				);
+
+				glColor3b(0,255,0);
+				glVertex3v16(
+					floattof32(mesh_positions[poly_positions[i + 1] * 3]),
+					floattof32(mesh_positions[poly_positions[i + 1] * 3 + 1]),
+					floattof32(mesh_positions[poly_positions[i + 1] * 3 + 2])
+				);
+
+				glColor3b(0,0,255);
+				glVertex3v16(
+					floattof32(mesh_positions[poly_positions[i + 2] * 3]),
+					floattof32(mesh_positions[poly_positions[i + 2] * 3 + 1]),
+					floattof32(mesh_positions[poly_positions[i + 2] * 3 + 2])
+				);
+			glEnd();
+		}
+		
+		glPopMatrix(1);
+		glFlush(0);
+		
+		rotateX += 2;
+		rotateY -= 1;
 	}
 
 	return 0;
