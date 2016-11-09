@@ -10,6 +10,7 @@ struct geometry {
     double *vertices;
 	int *indices;
 	int count;
+	m4x4 matrix;
 };
 
 struct model *load_model(char *file_name);

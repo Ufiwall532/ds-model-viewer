@@ -30,7 +30,7 @@ int main(void) {
 	float rotateY = 0.0;
 
 	while(1) {
-		glPushMatrix();
+	    glPushMatrix();
 		glTranslatef32(0, 0, floattof32(-2));
 		glRotateX(rotateX);
 		glRotateY(rotateY);
@@ -39,6 +39,9 @@ int main(void) {
 		
 		for(int i = 0; i < model->count; i++) {
 		    struct geometry *curr = &model->geometries[i];
+		    
+		    glPushMatrix();
+		    glMultMatrix4x4(&curr->matrix);
 		    
 		    for(int j = 0; j < curr->count; j += 3) {
 			    glBegin(GL_TRIANGLE);
@@ -64,12 +67,13 @@ int main(void) {
 				    );
 			    glEnd();
 		    }
+		    glPopMatrix(1);
 		}
 		
 		glPopMatrix(1);
 		glFlush(0);
 		
-		rotateX += 2;
+		rotateX += 1;
 		rotateY -= 1;
 		
 		swiWaitForVBlank();

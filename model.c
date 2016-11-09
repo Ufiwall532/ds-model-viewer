@@ -110,6 +110,74 @@ void *mesh_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
 	return NULL;
 }
 
+void *matrix_content_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
+	const char *name, const char *attribute, const char *value)
+{
+    static int matrix_count = 0;
+	if (event == ADD_CONTENT) {
+	    struct geometry *curr = &new_model->geometries[matrix_count++];
+	    char *position = strtok((char *)value, " ");
+	    double m_copy[16];
+		int i = 0;
+		
+		while(position) {
+			m_copy[i++] = floattov16(atof(position));
+			position = strtok(NULL, " ");
+		}
+		
+		curr->matrix.m[0] = m_copy[0];
+		curr->matrix.m[1] = m_copy[4];
+		curr->matrix.m[2] = m_copy[8];
+		curr->matrix.m[3] = m_copy[12];
+		curr->matrix.m[4] = m_copy[1];
+		curr->matrix.m[5] = m_copy[5];
+		curr->matrix.m[6] = m_copy[9];
+		curr->matrix.m[7] = m_copy[13];
+		curr->matrix.m[8] = m_copy[2];
+		curr->matrix.m[9] = m_copy[6];
+		curr->matrix.m[10] = m_copy[10];
+		curr->matrix.m[11] = m_copy[14];
+		curr->matrix.m[12] = m_copy[3];
+		curr->matrix.m[13] = m_copy[7];
+		curr->matrix.m[14] = m_copy[11];
+		curr->matrix.m[15] = m_copy[15];
+	}
+	return NULL;
+}
+
+void *matrix_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
+	const char *name, const char *attribute, const char *value)
+{
+	if (event == ADD_SUBTAG) {
+		if (strcmp(name, "matrix") == 0) {
+		    return matrix_content_tag_handler;
+		}
+	}
+	return NULL;
+}
+
+void *node_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
+	const char *name, const char *attribute, const char *value)
+{
+	if (event == ADD_SUBTAG) {
+		if (strcmp(name, "node") == 0) {
+			return matrix_tag_handler;
+		}
+	}
+	return NULL;
+}
+
+void *visual_scene_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
+	const char *name, const char *attribute, const char *value)
+{
+	if (event == ADD_SUBTAG) {
+		if (strcmp(name, "visual_scene") == 0) {
+			return node_tag_handler;
+		}
+	}
+	return NULL;
+}
+
 void *geometry_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
 	const char *name, const char *attribute, const char *value)
 {
@@ -117,7 +185,7 @@ void *geometry_tag_handler(SimpleXmlParser parser, SimpleXmlEvent event,
 		if (strcmp(name, "geometry") == 0) {
 		    new_model->count++;
 		    new_model->geometries = realloc(new_model->geometries,
-		        new_model->count * sizeof(struct geometry));
+		        new_model->count * sizeof(struct geometry));		    
 			return mesh_tag_handler;
 		}
 	}
@@ -131,6 +199,8 @@ void *library_geometries_tag_handler(SimpleXmlParser parser,
 	if (event == ADD_SUBTAG) {
 		if (strcmp(name, "library_geometries") == 0) {
 			return geometry_tag_handler;
+		} else if (strcmp(name, "library_visual_scenes") == 0) {
+			return visual_scene_tag_handler;
 		}
 	}
 	return NULL;
@@ -185,7 +255,7 @@ struct model *load_model(char *file_name) {
 	    return NULL;
 	}
 
-    new_model = malloc(sizeof(struct model));	
+    new_model = malloc(sizeof(struct model));
 	simpleXmlParse(xml_parser, collada_tag_handler);
 	simpleXmlDestroyParser(xml_parser);
 	free(file_data);
