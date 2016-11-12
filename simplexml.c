@@ -317,7 +317,7 @@ SimpleXmlParserState createSimpleXmlParser (const char *sData, long nDataSize) {
 void destroySimpleXmlParser (SimpleXmlParserState parser) {
 	if (parser != NULL) {
 		if (parser->vbNextToken != NULL) {
-			free(parser->vbNextToken);
+			destroySimpleXmlValueBuffer(parser->vbNextToken);
 		}
 		if (parser->szAttribute != NULL) {
 			free(parser->szAttribute);
