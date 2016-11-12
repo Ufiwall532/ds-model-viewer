@@ -255,7 +255,7 @@ struct model *load_model(char *file_name) {
 	    return NULL;
 	}
 
-    new_model = malloc(sizeof(struct model));
+    new_model = calloc(1, sizeof(struct model));
 	simpleXmlParse(xml_parser, collada_tag_handler);
 	simpleXmlDestroyParser(xml_parser);
 	free(file_data);
