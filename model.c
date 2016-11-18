@@ -48,6 +48,8 @@ struct model *load_model(char *file_name) {
 	    }
 	}
 	
+	fclose(file);
+	
 	return new_model;
 }
 
