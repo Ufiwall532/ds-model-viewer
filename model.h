@@ -2,15 +2,20 @@
 #define _MODEL_H_
 
 struct model {
-	struct geometry *geometries;
+	struct mesh *meshes;
 	int count;
 };
 
-struct geometry {
-    double *vertices;
-	int *indices;
+struct vector3 {
+    double x;
+    double y;
+    double z;
+};
+
+struct mesh {
+    struct vector3 *vertices;
+    int *indices;
 	int count;
-	m4x4 matrix;
 };
 
 struct model *load_model(char *file_name);

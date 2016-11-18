@@ -11,7 +11,7 @@ int main(void) {
 		return 0;
 	}
 	
-	struct model *model = load_model("multi-object-test.dae");
+	struct model *model = load_model("star.sos");
 	
 	videoSetMode(MODE_0_3D);
 	glInit();
@@ -26,54 +26,47 @@ int main(void) {
 			  0.0, 0.0, 0.0,  //look at
 			  0.0, 1.0, 0.0); //up
 
-	float rotateX = 0.0;
 	float rotateY = 0.0;
 
 	while(1) {
 	    glPushMatrix();
 		glTranslatef32(0, 0, floattof32(-2));
-		glRotateX(rotateX);
 		glRotateY(rotateY);
 		glMatrixMode(GL_MODELVIEW);
 		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
 		
 		for(int i = 0; i < model->count; i++) {
-		    struct geometry *curr = &model->geometries[i];
-		    
-		    glPushMatrix();
-		    glMultMatrix4x4(&curr->matrix);
-		    
-		    for(int j = 0; j < curr->count; j += 3) {
+		    struct mesh *curr = &model->meshes[i];
+
+		    for(int j = 0; j < curr->count; j++) {
 			    glBegin(GL_TRIANGLE);
 				    glColor3b(255,0,0);
 				    glVertex3v16(
-					    floattof32(curr->vertices[curr->indices[j] * 3]),
-					    floattof32(curr->vertices[curr->indices[j] * 3 + 1]),
-					    floattof32(curr->vertices[curr->indices[j] * 3 + 2])
+					    floattof32(curr->vertices[curr->indices[j * 3]].x),
+					    floattof32(curr->vertices[curr->indices[j * 3]].y),
+					    floattof32(curr->vertices[curr->indices[j * 3]].z)
 				    );
 
 				    glColor3b(0,255,0);
 				    glVertex3v16(
-					    floattof32(curr->vertices[curr->indices[j + 1] * 3]),
-					    floattof32(curr->vertices[curr->indices[j + 1] * 3 + 1]),
-					    floattof32(curr->vertices[curr->indices[j + 1] * 3 + 2])
+					    floattof32(curr->vertices[curr->indices[j * 3 + 1]].x),
+					    floattof32(curr->vertices[curr->indices[j * 3 + 1]].y),
+					    floattof32(curr->vertices[curr->indices[j * 3 + 1]].z)
 				    );
 
 				    glColor3b(0,0,255);
 				    glVertex3v16(
-					    floattof32(curr->vertices[curr->indices[j + 2] * 3]),
-					    floattof32(curr->vertices[curr->indices[j + 2] * 3 + 1]),
-					    floattof32(curr->vertices[curr->indices[j + 2] * 3 + 2])
+					    floattof32(curr->vertices[curr->indices[j * 3 + 2]].x),
+					    floattof32(curr->vertices[curr->indices[j * 3 + 2]].y),
+					    floattof32(curr->vertices[curr->indices[j * 3 + 2]].z)
 				    );
 			    glEnd();
 		    }
-		    glPopMatrix(1);
 		}
 		
 		glPopMatrix(1);
 		glFlush(0);
 		
-		rotateX += 1;
 		rotateY -= 1;
 		
 		swiWaitForVBlank();
