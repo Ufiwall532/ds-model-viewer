@@ -31,7 +31,7 @@ int LoadGLTextures() {
 
 	glGenTextures(1, &texture[0]);
 	glBindTexture(0, texture[0]);
-	glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_256 , TEXTURE_SIZE_256, 0,
+	glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_128, TEXTURE_SIZE_128, 0,
 	    TEXGEN_TEXCOORD, pcx.image.data8);
 
 	imageDestroy(&pcx);
@@ -71,8 +71,12 @@ int main(void) {
 
 	while(1) {
 	    glPushMatrix();
-		glTranslatef32(0, 0, floattof32(-2));
+		glTranslatef32(0, 0, floattof32(-1));
 		glRotateY(rotateY);
+		
+		glMatrixMode(GL_TEXTURE);
+		glLoadIdentity();
+		
 		glMatrixMode(GL_MODELVIEW);
 		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
 		glColor3f(1,1,1);
@@ -119,7 +123,7 @@ int main(void) {
 		
 		glPopMatrix(1);
 		glFlush(0);
-		rotateY -= 1;
+		rotateY -= 2;
 		
 		swiWaitForVBlank();
 	}
