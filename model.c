@@ -25,7 +25,6 @@ struct model *load_model(char *file_name) {
 	    int vertex_count = 0;
 	    fscanf(file, "%i", &vertex_count);
 	    new_model->meshes[i].vertices = malloc(vertex_count * sizeof(struct vector3));
-
 	    for(int j = 0; j < vertex_count; j++) {
 	        double x, y, z;
 	        fscanf(file, "%lf %lf %lf", &x, &y, &z);
@@ -34,11 +33,20 @@ struct model *load_model(char *file_name) {
 	        new_model->meshes[i].vertices[j].z = z;
 	    }
 	    
+	    int uv_count = 0;
+	    fscanf(file, "%i", &uv_count);
+	    new_model->meshes[i].uvs = malloc(uv_count * sizeof(struct vector2));
+	    for(int j = 0; j < uv_count; j++) {
+	        double x, y;
+	        fscanf(file, "%lf %lf", &x, &y);
+	        new_model->meshes[i].uvs[j].x = x;
+	        new_model->meshes[i].uvs[j].y = y;
+	    }
+	    
 	    int index_count = 0;
 	    fscanf(file, "%d", &index_count);
 	    new_model->meshes[i].count = index_count;
 	    new_model->meshes[i].indices = malloc(index_count * 3 * sizeof(int));
-	
 	    for(int j = 0; j < index_count; j++) {
 	        int v1, v2, v3;
 	        fscanf(file, "%i %i %i", &v1, &v2, &v3);

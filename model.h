@@ -12,8 +12,14 @@ struct vector3 {
     double z;
 };
 
+struct vector2 {
+    double x;
+    double y;
+};
+
 struct mesh {
     struct vector3 *vertices;
+    struct vector2 *uvs;
     int *indices;
 	int count;
 };
