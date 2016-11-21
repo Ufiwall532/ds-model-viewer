@@ -5,19 +5,19 @@
 #include <sys/stat.h>
 #include "model.h"
 
-int texture[1];
+int texture[2];
 
 int LoadGLTextures() {
     sImage pcx;
     struct stat sb;
     unsigned char *contents;
     
-    if(stat("diffuse.pcx", &sb) != 0) {
+    if(stat("pipe.pcx", &sb) != 0) {
         iprintf("Failed to get stat.\n");
         return FALSE;
     }
 
-    FILE *file = fopen("diffuse.pcx", "rb");
+    FILE *file = fopen("pipe.pcx", "rb");
     contents = (unsigned char *)malloc(sb.st_size + 1);
     fread(contents, sizeof(unsigned char), sb.st_size, file);
 
@@ -35,6 +35,33 @@ int LoadGLTextures() {
         TEXGEN_TEXCOORD, pcx.image.data8);
 
     imageDestroy(&pcx);
+    free(contents);
+    fclose(file);
+    
+    if(stat("star.pcx", &sb) != 0) {
+        iprintf("Failed to get stat.\n");
+        return FALSE;
+    }
+
+    file = fopen("star.pcx", "rb");
+    contents = (unsigned char *)malloc(sb.st_size + 1);
+    fread(contents, sizeof(unsigned char), sb.st_size, file);
+
+    if(!file) {
+        iprintf("Failed to open file.\n");
+        return FALSE;   
+    }
+
+    loadPCX((u8*)contents, &pcx);	
+    image8to16(&pcx);
+
+    glGenTextures(1, &texture[1]);
+    glBindTexture(0, texture[1]);
+    glTexImage2D(0, 0, GL_RGB, TEXTURE_SIZE_128, TEXTURE_SIZE_128, 0,
+        TEXGEN_TEXCOORD, pcx.image.data8);
+
+    imageDestroy(&pcx);
+    free(contents);
     fclose(file);
 
     return TRUE;
@@ -48,7 +75,8 @@ int main(void) {
         return 0;
     }
 	
-    struct model *model = load_model("star.sos");
+    struct model *pipe = load_model("pipe.sos");
+    struct model *star = load_model("star.sos");
 	
     videoSetMode(MODE_0_3D);
     vramSetBankA(VRAM_A_TEXTURE);
@@ -63,7 +91,7 @@ int main(void) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60, 256.0 / 192.0, 0.1, 40);	
-    gluLookAt(0.0, 0.0, 1.0,  //camera possition 
+    gluLookAt(0.0, 0.0, 1.0,  //camera position 
               0.0, 0.0, 0.0,  //look at
               0.0, 1.0, 0.0); //up
 
@@ -71,16 +99,18 @@ int main(void) {
 
     while(1) {
         glPushMatrix();
-        glTranslatef32(0, 0, floattof32(-2));
-        glRotateY(rotateY);
+        glTranslatef32(0, floattof32(-0.6), floattof32(-3.4));
+        glRotateX(32);
+		glRotateY(-65);
 		
         glMatrixMode(GL_MODELVIEW);
         glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
         glColor3f(1, 1, 1);
+        
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
-
-        for(int i = 0; i < model->count; i++) {
-            struct mesh *curr = &model->meshes[i];
+        glPushMatrix();
+        for(int i = 0; i < pipe->count; i++) {
+            struct mesh *curr = &pipe->meshes[i];
 
             for(int j = 0; j < curr->count; j++) {
                 glBegin(GL_TRIANGLE);
@@ -107,6 +137,42 @@ int main(void) {
                 glEnd();
             }
         }
+        glPopMatrix(1);
+        
+        glBindTexture(GL_TEXTURE_2D, texture[1]);
+        glPushMatrix();
+        glTranslatef32(0, floattof32(2), 0);
+        glRotateY(rotateY);
+        glScalef(0.5, 0.5, 0.5);
+        for(int i = 0; i < star->count; i++) {
+            struct mesh *curr = &star->meshes[i];
+
+            for(int j = 0; j < curr->count; j++) {
+                glBegin(GL_TRIANGLE);
+			        glTexCoord2f(curr->uvs[j * 3].x, curr->uvs[j * 3].y);
+                    glVertex3v16(
+	                    floattof32(curr->vertices[curr->indices[j * 3]].x),
+		                floattof32(curr->vertices[curr->indices[j * 3]].y),
+	                    floattof32(curr->vertices[curr->indices[j * 3]].z)
+                    );
+
+                    glTexCoord2f(curr->uvs[j * 3 + 1].x, curr->uvs[j * 3 + 1].y);
+                    glVertex3v16(
+		                floattof32(curr->vertices[curr->indices[j * 3 + 1]].x),
+	                    floattof32(curr->vertices[curr->indices[j * 3 + 1]].y),
+                        floattof32(curr->vertices[curr->indices[j * 3 + 1]].z)
+	                );
+
+                    glTexCoord2f(curr->uvs[j * 3 + 2].x, curr->uvs[j * 3 + 2].y);
+                    glVertex3v16(
+	                    floattof32(curr->vertices[curr->indices[j * 3 + 2]].x),
+		                floattof32(curr->vertices[curr->indices[j * 3 + 2]].y),
+	                    floattof32(curr->vertices[curr->indices[j * 3 + 2]].z)
+	                );
+                glEnd();
+            }
+        }
+        glPopMatrix(1);
 		
         glPopMatrix(1);
         glFlush(0);
@@ -115,7 +181,8 @@ int main(void) {
         swiWaitForVBlank();
     }
 	
-    free(model);
+    free(pipe);
+    free(star);
 
     return 0;
 }
