@@ -38,12 +38,12 @@ int LoadGLTextures() {
     free(contents);
     fclose(file);
     
-    if(stat("star.pcx", &sb) != 0) {
+    if(stat("goomba.pcx", &sb) != 0) {
         iprintf("Failed to get stat.\n");
         return FALSE;
     }
 
-    file = fopen("star.pcx", "rb");
+    file = fopen("goomba.pcx", "rb");
     contents = (unsigned char *)malloc(sb.st_size + 1);
     fread(contents, sizeof(unsigned char), sb.st_size, file);
 
@@ -76,14 +76,14 @@ int main(void) {
     }
 	
     struct model *pipe = load_model("pipe.sos");
-    struct model *star = load_model("star.sos");
+    struct model *goomba = load_model("goomba.sos");
 	
     videoSetMode(MODE_0_3D);
     vramSetBankA(VRAM_A_TEXTURE);
     
     glInit();
     glEnable(GL_TEXTURE_2D);
-    glClearColor(222, 245, 255, 31);
+    glClearColor(249, 250, 255, 31);
     glViewport(0, 0, 255, 191);
 	
     LoadGLTextures();
@@ -94,13 +94,13 @@ int main(void) {
     gluLookAt(0.0, 0.0, 1.0,  //camera position 
               0.0, 0.0, 0.0,  //look at
               0.0, 1.0, 0.0); //up
-
-    float rotateY = 0.0;
+              
+    float goomba_y = -2.0;
 
     while(1) {
         glPushMatrix();
-        glTranslatef32(0, floattof32(-0.6), floattof32(-3.4));
-        glRotateX(32);
+        glTranslatef32(0, floattof32(-1.2), floattof32(-1.5));
+        glRotateX(12);
 		glRotateY(-65);
 		
         glMatrixMode(GL_MODELVIEW);
@@ -141,11 +141,10 @@ int main(void) {
         
         glBindTexture(GL_TEXTURE_2D, texture[1]);
         glPushMatrix();
-        glTranslatef32(0, floattof32(2), 0);
-        glRotateY(rotateY);
-        glScalef(0.5, 0.5, 0.5);
-        for(int i = 0; i < star->count; i++) {
-            struct mesh *curr = &star->meshes[i];
+        glTranslatef32(0, floattof32(goomba_y), 0);
+        glRotateY(65);
+        for(int i = 0; i < goomba->count; i++) {
+            struct mesh *curr = &goomba->meshes[i];
 
             for(int j = 0; j < curr->count; j++) {
                 glBegin(GL_TRIANGLE);
@@ -176,13 +175,19 @@ int main(void) {
 		
         glPopMatrix(1);
         glFlush(0);
-        rotateY -= 1.5;
+        
+        // loop the goomba :)
+        if(goomba_y < 2.5) {
+            goomba_y += 0.02;
+        } else {
+            goomba_y = -2.0;
+        }
 		
         swiWaitForVBlank();
     }
 	
     free(pipe);
-    free(star);
+    free(goomba);
 
     return 0;
 }
