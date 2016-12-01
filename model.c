@@ -39,8 +39,8 @@ struct model *load_model(char *file_name) {
 	    for(int j = 0; j < uv_count; j++) {
 	        double x, y;
 	        fscanf(file, "%lf %lf", &x, &y);
-	        new_model->meshes[i].uvs[j].x = y;
-	        new_model->meshes[i].uvs[j].y = x;
+	        new_model->meshes[i].uvs[j].x = x;
+	        new_model->meshes[i].uvs[j].y = 1.0 - y;
 	    }
 	    
 	    int index_count = 0;
